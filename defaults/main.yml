@@ -1,0 +1,13 @@
+jboss_firewall_type: none
+
+
+jboss_default_ports:
+  - {port: '8443/tcp', state: 'enabled'}
+  - {port: '9999/tcp', state: 'enabled'}
+  - {port: '8080/tcp', state: 'enabled'}
+  - {port: '23364/udp', state: 'enabled'}
+
+
+jboss_jgroups_ports:
+  - {port: '55200/udp', state: 'enabled'}
+  - {port: '45688/udp', state: 'enabled'}

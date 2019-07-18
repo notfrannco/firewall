@@ -1,0 +1,33 @@
+---
+- name: Start firewalld if it is enabled and not running
+  service:
+    name: firewalld
+    state: started
+  when:
+    - firewall_is_enabled == 0   # enabled true
+    - firewalld_running.rc != 0  # not running
+
+- name: Enable defaults Jboss EAP ports
+  firewalld:
+    port: '{{item.port}}'
+    permanent: true
+    state: '{{item.state}}'
+    immediate: yes
+  when: inventory_hostname in groups['jboss_group'] and groups['jboss_group']|length > 1
+  with_items: "{{ jboss_default_ports }}"
+  notify: Reload firewalld
+
+- name: Enable Jboss JGroups ports
+  firewalld:
+    port: '{{item.port}}'
+    permanent: true
+    state: '{{item.state}}'
+    immediate: yes
+  when: inventory_hostname in groups['jboss_jgroups'] and groups['jboss_jgroups']|length > 1
+  with_items: "{{ jboss_jgroups_ports }}"
+  notify: Reload firewalld
+
+- name: Jboss Undertow firewalld configuration
+  shell: firewall-cmd --add-forward-port=port=443:proto=tcp:toport=8443 --permanent
+  when: inventory_hostname in groups['proxy']
+  notify: Reload firewalld

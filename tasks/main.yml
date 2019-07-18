@@ -1,0 +1,27 @@
+---
+- name: Check if firewalld is running
+  command: firewall-cmd --state
+  register: firewalld_running
+  failed_when: false
+  ignore_errors: true
+  changed_when: false
+
+- name: Determine if firewalld is enabled
+  command: systemctl is-enabled firewalld
+  register: systemctl_is_enabled
+  changed_when: false
+
+- name: Select firewalld as default firewall
+  set_fact:
+    #tower_firewall_type: firewalld
+    jboss_firewall_type: firewalld
+  when: >
+    firewalld_running.rc == 0 or
+    systemctl_is_enabled.rc == 0
+
+- name: "Include {{ 'no' if jboss_firewall_type == 'none' else jboss_firewall_type }} tasks"
+  include_tasks: '{{ jboss_firewall_type }}.yml'
+  when: >
+    firewalld_running.rc == 0 or
+    systemctl_unit_files.stdout_lines | select('match','firewalld.service\s+enabled') | list | length == 1 or
+    ( iptables_installed.rc == 0 and iptables_exists.stat.exists and iptables_service.stat.exists )
